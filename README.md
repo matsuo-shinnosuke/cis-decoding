@@ -21,10 +21,10 @@ $ pip install -r requirements.txt
 ## Training & Test
 After putting the dataset to `./data` directory, please run following command.
 ```
-$ python main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
+$ python src/main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
 ```
 ```
-$ python main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
+$ python src/main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
 ```
 
 ## Citation
