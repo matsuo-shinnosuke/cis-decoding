@@ -6,4 +6,5 @@ seaborn
 scipy
 tqdm
 Pillow
+openpyxl
 autopep8

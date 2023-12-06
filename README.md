@@ -1,7 +1,8 @@
-# Genome-wide cis-decoding for expression design in tomato using cistrome data and explainable deep learning [[Publishersite](https://academic.oup.com/plcell/article/34/6/2174/6542321)] (Pytorch implementation)
+# Genome-wide cis-decoding for expression design in tomato using cistrome data and explainable deep learning  (Pytorch implementation)
 
 Takashi Akagi*, Kanae Masuda*, Eriko Kuwada*, Kouki Takeshita, Taiji Kawakatsu, Tohru Ariizumi, Yasutaka Kubo, Koichiro Ushijima, Seiichi Uchida
 (*Equal contribution)
+[[Publishersite](https://academic.oup.com/plcell/article/34/6/2174/6542321)]
 
 ![Illustration](./image/overview_cis-decoding.png)
 
@@ -19,13 +20,39 @@ $ pip install -r requirements.txt
 ```
 
 ## Training & Test
-After putting the dataset to `./data` directory, please run following command.
+1. Please place the following two files in the `./data` directory.
+- Fasta file
+```
+# ./data/sample_data.fa
+>LG10:10024102-10026102
+GAAATAACATCAGAATAGTGACAAGCACTCT..
+>LG10:10083895-10085895
+AATACTCTAAGGGGCAAAGTGTAGTTAGCGA..
+>LG10:10102616-10104616
+：
+```
+- Target binary expression pattern file (tab-delimited)
+```
+# ./data/sample_label.txt
+LG11:8580379-8582379	1
+LG11:8734084-8736084	1
+：
+LG11:8784721-8786721	0
+LG11:8790102-8792102	0
+：
+```
+
+2. Please run following command.
 ```
 $ python src/main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
-```
-```
 $ python src/main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
+$ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
 ```
+
+## Output
+The following two files will be saved in the result directory.
+- relevance_position.xlsx: relevance of promoter position to expression data
+- relevance_TF.xlsx: relevance of transcription factor to expression data
 
 ## Citation
 If you find this repository helpful, please consider citing:
