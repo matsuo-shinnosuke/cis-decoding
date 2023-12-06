@@ -50,7 +50,7 @@ $ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --outp
 ```
 
 ## Output
-The following two files will be saved in the result directory.
+The following two files will be saved in the `./result` directory.
 - relevance_position.xlsx: relevance of promoter position to expression data
 - relevance_TF.xlsx: relevance of transcription factor to expression data
 
