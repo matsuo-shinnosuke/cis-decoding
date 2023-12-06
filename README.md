@@ -51,8 +51,23 @@ $ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --outp
 
 ## Output
 The following two files will be saved in the `./result` directory.
-- relevance_position.xlsx: relevance of promoter position to expression data
 - relevance_TF.xlsx: relevance of transcription factor to expression data
+
+|                        | ABF2_col_v3a | ABI5_colamp_v3b | …  | 
+| ---------------------- | ------------ | --------------- | --- | 
+| LG10:1055573-1057573   |              |                 |     | 
+| LG10:10779054-10781054 |              |                 |     | 
+| LG10:1079158-1081158   |              |                 |     | 
+| ：                     |              |                 |     | 
+
+- relevance_position.xlsx: relevance of promoter region to expression data
+
+|                        | 0   | 1   | …  | 
+| ---------------------- | --- | --- | --- | 
+| LG10:1055573-1057573   |     |     |     | 
+| LG10:10779054-10781054 |     |     |     | 
+| LG10:1079158-1081158   |     |     |     | 
+| ：                     |     |     |     | 
 
 ## Citation
 If you find this repository helpful, please consider citing:
