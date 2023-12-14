@@ -49,7 +49,7 @@ LG11:8790102-8792102	0
 $ python src/main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
 ```
 
-2. (optional) Output 1st-DL results to csv file for each gene. 
+2. (optional) Output 1st-DL results to csv file for each gene. If the number of genes is large, this may take a lot of time. You can proceed without this run.
 ```
 $ python src/to_csv_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
 ```
