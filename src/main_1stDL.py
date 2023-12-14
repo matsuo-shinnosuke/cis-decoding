@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import pandas as pd
 
 from arguments import parse_option
 from utils import dna2onehot
@@ -16,17 +17,20 @@ def load_data(data_dir, fasta_file_name, gene_length, output_dir):
         print('loading data ...')
         name = np.load(f'{output_dir}/{fasta_file_name}/gene_name.npy')
         data = np.load(f'{output_dir}/{fasta_file_name}/gene_data.npy')
+        data_origin = np.load(f'{output_dir}/{fasta_file_name}/gene_data_origin.npy')
         print('[gene_name.npy] size: ' + str(name.shape))
         print('[gene_data.npy] size: ' + str(data.shape))
+        print('[gene_data_origin.npy] size: ' + str(data_origin.shape))
     else:
         print('.fa->.npy file ...')
         fas = open(f'{data_dir}/{fasta_file_name}', 'r')
         fas = fas.readlines()
 
-        name, data = [], []
+        name, data_origin, data = [], [], []
         for i in tqdm(range(0, len(fas), 2), leave=False):
             if len(fas[i+1].rstrip()) == gene_length:
                 name.append(fas[i].rstrip()[1:])
+                data_origin.append(fas[i+1].rstrip())
                 data.append(dna2onehot(
                     list(fas[i+1].rstrip())).astype(np.int8))
             else:
@@ -43,32 +47,44 @@ def load_data(data_dir, fasta_file_name, gene_length, output_dir):
         data = np.array(data)
         np.save(f'{output_dir}/{fasta_file_name}/gene_data.npy', data)
         print('[gene_data.npy] size: ' + str(data.shape))
+        data_origin = np.array(data_origin)
+        np.save(f'{output_dir}/{fasta_file_name}/gene_data_origin.npy', data_origin)
+        print('[gene_data_origin.npy] size: ' + str(data_origin.shape))
 
-    return name, data
+    return name, data, data_origin
 
 
-def split_bin(X, output_dir, fasta_file_name, bin, walk):
+def split_bin(X, X_origin, output_dir, fasta_file_name, bin, walk):
     X_bin_path = f'{output_dir}/{fasta_file_name}/gene_data_bin{bin}_walk{walk}.npy'
+    X_bin_origin_path = f'{output_dir}/{fasta_file_name}/gene_data_bin{bin}_walk{walk}_origin.npy'
+
     if os.path.exists(X_bin_path):
         print('load %s ...' % (X_bin_path))
         X_bin = np.load(X_bin_path)
         print('[gene_data_bin{bin}_walk{walk}.npy] size: ' + str(X_bin.shape))
+        X_bin_origin = np.load(X_bin_origin_path)
+        print('[gene_data_bin{bin}_walk{walk}_origin.npy] size: ' + str(X_bin_origin.shape))
+
     else:
         print('split ...')
         length = len(X[0])
-        n_sub = int(((length - bin) / walk)+1)
-        X_bin = np.zeros((X.shape[0], n_sub, bin, 4), dtype=np.int8)
-        for i, line in enumerate(tqdm(X, leave=False)):
+        X_bin, X_bin_origin = [], []
+        for i in tqdm(range(len(X)), leave=False):
             n = 0
-            sub = []
+            sub, sub_origin = [], []
             while length >= bin + (n*walk):
-                sub.append(line[n*walk: bin + n*walk])
+                sub.append(X[i][n*walk: bin + n*walk])
+                sub_origin.append(X_origin[i][n*walk: bin + n*walk])
                 n += 1
 
-            X_bin[i] = np.array(sub)
+            X_bin.append(np.array(sub))
+            X_bin_origin.append(np.array(sub_origin))
+        X_bin, X_bin_origin = np.array(X_bin), np.array(X_bin_origin)
         np.save(X_bin_path, X_bin)
         print(f'[gene_data_bin{bin}_walk{walk}.npy] size: ' + str(X_bin.shape))
-    return X_bin
+        np.save(X_bin_origin_path, X_bin_origin)
+        print(f'[gene_data_bin{bin}_walk{walk}_origin.npy] size: ' + str(X_bin_origin.shape))
+    return X_bin, X_bin_origin
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data):
@@ -124,7 +140,7 @@ if __name__ == "__main__":
     args = parse_option()
 
     ######## Loading data #########
-    name, data = load_data(data_dir=args.data_dir, 
+    name, data, data_origin = load_data(data_dir=args.data_dir, 
                            fasta_file_name=args.fasta_file, 
                            gene_length=args.length,
                            output_dir=args.output_dir)
@@ -132,11 +148,12 @@ if __name__ == "__main__":
         TF_dict = pickle.load(tf)
 
     ######## Splitting bin #########
-    gene_data_bin = split_bin(X=data, 
-                              output_dir=args.output_dir,
-                              fasta_file_name=args.fasta_file,
-                              bin=args.bin, 
-                              walk=args.walk)
+    gene_data_bin, gene_data_origin_bin = split_bin(X=data, 
+                                                    X_origin=data_origin,
+                                                    output_dir=args.output_dir,
+                                                    fasta_file_name=args.fasta_file,
+                                                    bin=args.bin, 
+                                                    walk=args.walk)
     
     ######## Prediction #########
     
@@ -151,21 +168,20 @@ if __name__ == "__main__":
 
         ################################################################
         p = f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy'
-        if not os.path.exists(p):
-            model.load_state_dict(torch.load(
-                f'{args.model_dir}/{TF_name}.pkl',
-                map_location=torch.device(args.device)))
-            
-            dataset = Dataset(gene_data_bin)
-            dataloader = torch.utils.data.DataLoader(
-                dataset, batch_size=args.batch_size,
-                shuffle=False, num_workers=args.num_workers)
-            pred = prediction(model, dataloader, args.device)
-            np.save(p, pred)
+
+        model.load_state_dict(torch.load(
+            f'{args.model_dir}/{TF_name}.pkl',
+            map_location=torch.device(args.device)))
+        
+        dataset = Dataset(gene_data_bin)
+        dataloader = torch.utils.data.DataLoader(
+            dataset, batch_size=args.batch_size,
+            shuffle=False, num_workers=args.num_workers)
+        pred = prediction(model, dataloader, args.device)
+        np.save(p, pred)
 
         ################################################################
         p = Path(f'{args.output_dir}/{args.fasta_file}/1st-cis-{args.bin_peak}-{args.threshold}/{TF_name}.npy')
-        if not os.path.exists(p):
-            pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
-            peak = detect_peak(pred, args.bin_peak, args.threshold)
-            np.save(p, peak)
+        pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
+        peak = detect_peak(pred, args.bin_peak, args.threshold)
+        np.save(p, peak)

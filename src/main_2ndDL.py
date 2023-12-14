@@ -1,13 +1,17 @@
 import numpy as np
 import argparse
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import tqdm
 from time import time
 from glob import glob
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from arguments import parse_option
 from utils import CNN, fix_seed
@@ -92,6 +96,8 @@ if __name__ == "__main__":
     ############ Training #############
     time_start = time()
     best_auc = 0
+    train_auc_list, test_auc_list = [], []
+    train_loss_list, test_loss_list = [], []
 
     for epoch in range(args.num_epochs):
         ####################################
@@ -142,12 +148,62 @@ if __name__ == "__main__":
         test_loss = np.array(losses).mean()
         test_auc = roc_auc_score(test_gt, test_pred)
 
+        ####################################
+        train_loss_list.append(train_loss)
+        test_loss_list.append(test_loss)
+        train_auc_list.append(train_auc)
+        test_auc_list.append(test_auc)
+
+        plt.plot(train_auc_list, label='training AUC')
+        plt.plot(test_auc_list, label='test AUC')
+        plt.title('AUC')
+        plt.xlabel('Epoch')
+        plt.ylim(0, 1)
+        plt.grid()
+        plt.legend()
+        plt.savefig(f'{args.output_dir}/{args.fasta_file}/curve_auc.png', dpi=300)
+        plt.close()
+
+        plt.plot(train_loss_list, label='training loss')
+        plt.plot(test_loss_list, label='test loss')
+        plt.title('Loss')
+        plt.xlabel('Epoch')
+        plt.grid()
+        plt.legend()
+        plt.savefig(f'{args.output_dir}/{args.fasta_file}/curve_loss.png', dpi=300)
+        plt.close()
+        
         print('[%d/%d]: train_auc: %.3f, train_loss: %.3f, test_auc: %.3f, test_loss: %.3f'
                      % (epoch+1, args.num_epochs, train_auc, train_loss, test_auc, test_loss))
 
         if best_auc < test_auc:
             torch.save(model.state_dict(), f'{args.output_dir}/{args.fasta_file}/mdoel.pkl')
             best_auc = test_auc
+
+            ### ROC curve ###
+            fpr, tpr, _ = roc_curve(train_gt, train_pred)
+            plt.plot(fpr, tpr, label='training ROC curve')
+            fpr, tpr, _ = roc_curve(test_gt, test_pred)
+            plt.plot(fpr, tpr, label='training ROC curve')
+            plt.title(f'Training AUC={train_auc:.3f}, Test AUC={test_auc:.3f}')
+            plt.xlabel('FPR: False positive rate')
+            plt.ylabel('TPR: True positive rate')
+            plt.legend()
+            plt.grid()
+            plt.savefig(f'{args.output_dir}/{args.fasta_file}/roc_curve.png', dpi=300)
+            plt.close()
+
+            ### Prediction ###
+            df_train = pd.DataFrame(data=train_pred,
+                                    columns=['prediction'], 
+                                    index=train_name)
+            df_train.to_csv(f'{args.output_dir}/{args.fasta_file}/2ndDL_prediction_train.csv')
+
+            df_test = pd.DataFrame(data=test_pred,
+                                    columns=['prediction'], 
+                                    index=test_name)
+            df_train.to_csv(f'{args.output_dir}/{args.fasta_file}/2ndDL_prediction_test.csv')
+
      
     time_end = time()
     print('exec time: %d s, best_auc: %.3f' % (time_end-time_start, best_auc))

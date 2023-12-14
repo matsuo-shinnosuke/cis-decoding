@@ -21,7 +21,7 @@ def parse_option():
     parser.add_argument('--device', default='cuda:0', type=str)
     parser.add_argument('--batch_size', default=512, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--num_epochs', default=100, type=int)
+    parser.add_argument('--num_epochs', default=30, type=int)
     parser.add_argument('--num_workers', default=4, type=int)
     args = parser.parse_args()
 

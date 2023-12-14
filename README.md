@@ -8,6 +8,8 @@ Takashi Akagi*, Kanae Masuda*, Eriko Kuwada*, Kouki Takeshita, Taiji Kawakatsu, 
 
 > In the evolutionary history of plants, variation in cis-regulatory elements (CREs) resulting in diversification of gene expression has played a central role in driving the evolution of lineage-specific traits. However, it is difficult to predict expression behaviors from CRE patterns to properly harness them, mainly because the biological processes are complex. In this study, we used cistrome datasets and explainable convolutional neural network (CNN) frameworks to predict genome-wide expression patterns in tomato (Solanum lycopersicum) fruit from the DNA sequences in gene regulatory regions. By fixing the effects of trans-acting factors using single cell-type spatiotemporal transcriptome data for the response variables, we developed a prediction model for crucial expression patterns in the initiation of tomato fruit ripening. Feature visualization of the CNNs identified nucleotide residues critical to the objective expression pattern in each gene, and their effects were validated experimentally in ripening tomato fruit. This cis-decoding framework will not only contribute to the understanding of the regulatory networks derived from CREs and transcription factor interactions, but also provides a flexible means of designing alleles for optimized expression.
 
+This repository is a pytorch implementation of [here](https://github.com/Takeshiddd/CisDecoding_cistrome).
+
 ## Requirements
 * python >= 3.9
 * cuda && cudnn
@@ -20,7 +22,7 @@ $ pip install -r requirements.txt
 ```
 
 ## Training & Test
-1. Please place the following two files in the `./data` directory.
+0. Please place the following two files in the `./data` directory.
 - Fasta file
 ```
 # ./data/sample_data.fa
@@ -42,32 +44,50 @@ LG11:8790102-8792102	0
 ：
 ```
 
-2. Please run following command.
+1. Execute 1st-DL.
 ```
 $ python src/main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
-$ python src/main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
-$ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
 ```
 
-## Output
-The following two files will be saved in the `./result` directory.
-- relevance_TF.xlsx: relevance of transcription factor to expression data
+2. (optional) Output 1st-DL results to csv file for each gene. 
+```
+$ python src/to_csv_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
+```
+Output example
+- `1st-pred-csv/(gene name).csv` shows the TF-binding peaks.
 
 |                        | ABF2_col_v3a | ABI5_colamp_v3b | …  | 
 | ---------------------- | ------------ | --------------- | --- | 
-| LG10:1055573-1057573   |              |                 |     | 
-| LG10:10779054-10781054 |              |                 |     | 
-| LG10:1079158-1081158   |              |                 |     | 
+| CTCTTCCTCTTCCTAGGTAATTTTGCAATAG   |              |                 |     | 
+| CTTCCTCTTCCTAGGTAATTTTGCAATAGAA |              |                 |     | 
+| TCCTCTTCCTAGGTAATTTTGCAATAGAAAC   |              |                 |     | 
 | ：                     |              |                 |     | 
 
-- relevance_position.xlsx: relevance of promoter region to expression data
 
-|                        | 0   | 1   | …  | 
-| ---------------------- | --- | --- | --- | 
-| LG10:1055573-1057573   |     |     |     | 
-| LG10:10779054-10781054 |     |     |     | 
-| LG10:1079158-1081158   |     |     |     | 
-| ：                     |     |     |     | 
+3. Execute 2nd-DL.
+```
+$ python src/main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
+$ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
+```
+Output example
+- `roc_curve.png` shows AUC and ROC curve.
+- `2ndDL_prediction_test.csv` shows the expression prediction for test data.
+
+|                        | prediction |
+| ---------------------- | ------------ | 
+| LG23:16262091-16264091   |              |                
+| LG3:18503076-18505076 |              |                
+| LG12:12982766-12984766   |              |                 |   
+| ：                     |              |                
+
+- `2nd-pred-csv/(gene name).csv` shows the relevance between transcription factor and promoter region for each expression data.
+
+|                        | 0 | 1 | …  | 
+| ---------------------- | ------------ | --------------- | --- | 
+| ABF2_col_v3a   |              |                 |     | 
+| ABI5_colamp_v3b |              |                 |     | 
+| ABR1_col_a   |              |                 |     | 
+| ：                     |              |                 |     | 
 
 ## Citation
 If you find this repository helpful, please consider citing:
