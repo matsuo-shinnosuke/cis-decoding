@@ -184,7 +184,7 @@ if __name__ == "__main__":
             fpr, tpr, _ = roc_curve(train_gt, train_pred)
             plt.plot(fpr, tpr, label='training ROC curve')
             fpr, tpr, _ = roc_curve(test_gt, test_pred)
-            plt.plot(fpr, tpr, label='training ROC curve')
+            plt.plot(fpr, tpr, label='test ROC curve')
             plt.title(f'Training AUC={train_auc:.3f}, Test AUC={test_auc:.3f}')
             plt.xlabel('FPR: False positive rate')
             plt.ylabel('TPR: True positive rate')
