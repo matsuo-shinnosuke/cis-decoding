@@ -26,6 +26,9 @@ def dna2onehot(x):
 class CNN(nn.Module):
     def __init__(self, data_length=20, n_channel=50, last_dense=2):
         super().__init__()
+        self.z_size = data_length
+        for i in range(4):
+            self.z_size = self.z_size//2
         self.features = nn.Sequential(
             nn.Conv1d(n_channel, 64, kernel_size=15, padding='same'),
             nn.ReLU(),
@@ -50,7 +53,7 @@ class CNN(nn.Module):
             nn.MaxPool1d(2),
             nn.Dropout(0.25),
             nn.Flatten(),
-            nn.Linear(64, 32),
+            nn.Linear(32*self.z_size, 32),
             nn.ReLU(),
             nn.Linear(32, 16),
             nn.ReLU(),
