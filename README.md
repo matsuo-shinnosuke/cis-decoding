@@ -16,7 +16,8 @@ This repository is a pytorch implementation of [here](https://github.com/Takeshi
 
 We strongly recommend using a virtual environment like Anaconda or Docker. The following is how to build the virtual environment for this code using anaconda.
 ```
-# pytorch install (https://pytorch.org/get-started/locally/)
+# Pytorch install: see https://pytorch.org/get-started/locally/
+# For example,
 $ pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 $ pip install -r requirements.txt
 ```

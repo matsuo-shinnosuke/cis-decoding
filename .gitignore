@@ -1,2 +1,4 @@
+.vscode
 result/*
 src/__pycache__
+run.sh
