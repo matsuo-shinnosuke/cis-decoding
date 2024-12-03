@@ -12,15 +12,15 @@ if __name__ == "__main__":
     gene_name = np.load(f'{args.output_dir}/{args.fasta_file}/gene_name.npy')
     gene_data = np.load(f'{args.output_dir}/{args.fasta_file}/gene_data_bin{args.bin}_walk{args.walk}_origin.npy')
     
-    with open(args.data_dir+'TF_dict.pkl', 'rb') as tf:
-        TF_dict = pickle.load(tf)
-    TF_name_list = [TF_name for TF_name in TF_dict.values()]
+    TF_dict = open(args.data_dir+'TF_dict.txt', 'r').read().split('\n')
+    TF_name_list = [TF_name for TF_name in TF_dict if TF_name]
 
     pred_list = []
-    for _, TF_name in tqdm(TF_dict.items(), leave=False):
-        pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
-        pred = (pred*100).round().astype(np.int8)
-        pred_list.append(pred)
+    for _, TF_name in tqdm(enumerate(TF_dict), leave=False):
+        if TF_name:
+            pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
+            pred = (pred*100).round().astype(np.int8)
+            pred_list.append(pred)
     pred = np.array(pred_list)
     np.save(f'{args.output_dir}/{args.fasta_file}/1st-pred/pred_all.npy', np.array(pred))
     

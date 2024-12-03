@@ -61,9 +61,9 @@ def split_bin(X, X_origin, output_dir, fasta_file_name, bin, walk):
     if os.path.exists(X_bin_path):
         print('load %s ...' % (X_bin_path))
         X_bin = np.load(X_bin_path)
-        print('[gene_data_bin{bin}_walk{walk}.npy] size: ' + str(X_bin.shape))
+        print(f'[gene_data_bin{bin}_walk{walk}.npy] size: ' + str(X_bin.shape))
         X_bin_origin = np.load(X_bin_origin_path)
-        print('[gene_data_bin{bin}_walk{walk}_origin.npy] size: ' + str(X_bin_origin.shape))
+        print(f'[gene_data_bin{bin}_walk{walk}_origin.npy] size: ' + str(X_bin_origin.shape))
 
     else:
         print('split ...')
@@ -98,16 +98,32 @@ class Dataset(torch.utils.data.Dataset):
         return data
 
     
-def get_FC_3layer():
-    return nn.Sequential(
-        nn.Flatten(start_dim=-2, end_dim=-1),
-        nn.Linear(31*4, 256),
-        nn.ReLU(),
-        nn.Linear(256, 64),
-        nn.ReLU(),
-        nn.Linear(64, 2),
-    )
+# def get_FC_3layer(bin):
+#     return nn.Sequential(
+#         nn.Flatten(start_dim=-2, end_dim=-1),
+#         nn.Linear(bin*4, 256),
+#         nn.ReLU(),
+#         nn.Linear(256, 64),
+#         nn.ReLU(),
+#         nn.Linear(64, 2),
+#     )
 
+class get_FC_3layer(nn.Module):
+    def __init__(self, bin):
+        super().__init__()
+
+        self.features = nn.Sequential(
+            nn.Flatten(start_dim=-2, end_dim=-1),
+            nn.Linear(bin*4, 256),
+            nn.ReLU(),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 2),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        return x
 
 def prediction(model, dataloader, device):
     model.eval()
@@ -144,8 +160,7 @@ if __name__ == "__main__":
                            fasta_file_name=args.fasta_file, 
                            gene_length=args.length,
                            output_dir=args.output_dir)
-    with open(args.data_dir+'TF_dict.pkl', 'rb') as tf:
-        TF_dict = pickle.load(tf)
+    TF_dict = open(args.data_dir+'TF_dict.txt', 'r').read().split('\n')
 
     ######## Splitting bin #########
     gene_data_bin, gene_data_origin_bin = split_bin(X=data, 
@@ -162,8 +177,8 @@ if __name__ == "__main__":
     p = Path(f'{args.output_dir}/{args.fasta_file}/1st-cis-{args.bin_peak}-{args.threshold}/')
     p.mkdir(parents=True, exist_ok=True)
 
-    model = get_FC_3layer().to(args.device)
-    for ID, TF_name in TF_dict.items():
+    model = get_FC_3layer(bin=args.bin).to(args.device)
+    for ID, TF_name in enumerate(TF_dict):
         print(ID, TF_name)
 
         ################################################################
