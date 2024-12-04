@@ -7,7 +7,7 @@ import pickle
 from pathlib import Path
 
 from arguments import parse_option
-from utils import CNN
+from model import CNN
 
 class Guided_backprop():
     def __init__(self, model):
