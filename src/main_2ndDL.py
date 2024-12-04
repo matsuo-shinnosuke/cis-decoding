@@ -177,7 +177,7 @@ if __name__ == "__main__":
                      % (epoch+1, args.num_epochs, train_auc, train_loss, test_auc, test_loss))
 
         if best_auc < test_auc:
-            torch.save(model.state_dict(), f'{args.output_dir}/{args.fasta_file}/mdoel.pkl')
+            torch.save(model.state_dict(), f'{args.output_dir}/{args.fasta_file}/model.pkl')
             best_auc = test_auc
 
             ### ROC curve ###
@@ -202,8 +202,7 @@ if __name__ == "__main__":
             df_test = pd.DataFrame(data=test_pred,
                                     columns=['prediction'], 
                                     index=test_name)
-            df_train.to_csv(f'{args.output_dir}/{args.fasta_file}/2ndDL_prediction_test.csv')
-
+            df_test.to_csv(f'{args.output_dir}/{args.fasta_file}/2ndDL_prediction_test.csv')
      
     time_end = time()
     print('exec time: %d s, best_auc: %.3f' % (time_end-time_start, best_auc))

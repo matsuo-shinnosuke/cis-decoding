@@ -1,4 +1,6 @@
 .vscode
 result/*
 src/__pycache__
+src/1stDL_training/__pycache__
+trash
 run.sh

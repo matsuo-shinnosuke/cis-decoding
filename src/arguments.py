@@ -5,7 +5,7 @@ from pathlib import Path
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--data_dir', default='data/', type=str, help='data directory name')
+    parser.add_argument('--data_dir', default='dataset/', type=str, help='data directory name')
     parser.add_argument('--fasta_file', default='sample_data.fa', type=str, help='fasta file name')
     parser.add_argument('--label_file', default='sample_label.txt', type=str, help='label file name')
     parser.add_argument('--length', default=2001, type=int, help='gene length')
@@ -23,6 +23,9 @@ def parse_option():
     parser.add_argument('--lr', default=1e-3, type=float)
     parser.add_argument('--num_epochs', default=30, type=int)
     parser.add_argument('--num_workers', default=4, type=int)
+
+    parser.add_argument('--TF_name', default='ABF2_col_v3a', type=str)
+
     args = parser.parse_args()
 
     p = Path(args.output_dir)
