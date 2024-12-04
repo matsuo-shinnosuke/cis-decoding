@@ -71,7 +71,7 @@ if __name__ == "__main__":
                            fasta_file_name=args.fasta_file, 
                            gene_length=args.length,
                            output_dir=args.output_dir)
-    TF_dict = open(args.data_dir+'TF_dict.txt', 'r').read().split('\n')
+    # TF_dict = open(args.data_dir+'TF_dict.txt', 'r').read().split('\n')
 
     ######## Splitting bin #########
     gene_data_bin, gene_data_origin_bin = split_bin(X=data, 
@@ -83,45 +83,37 @@ if __name__ == "__main__":
 
     ##### Inference ######
     print('Guided backpropagation ...')
+    TF_name = args.TF_name
+    print(TF_name)
+
     model = get_FC_3layer(bin=args.bin).to(args.device)
-    
-    result_tf_gene_list = []
-    for ID, TF_name in enumerate(TF_dict):
-        print(ID, TF_name)
-        model.load_state_dict(torch.load(f'{args.model_dir}/{TF_name}.pkl', map_location=torch.device(args.device)))
-        guided_bp = Guided_backprop(model)
-        pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
+    model.load_state_dict(torch.load(f'{args.model_dir}/{TF_name}.pkl', map_location=torch.device(args.device)))
+    guided_bp = Guided_backprop(model)
+    pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
 
-        result_gene_list = []
-        for idx in tqdm(range(len(gene_data_bin)), leave=False):
-            data = torch.tensor(gene_data_bin[idx]).float().to(args.device)
-            data = data.unsqueeze(0).requires_grad_()
-            target = np.where(pred[idx]>=args.threshold)[0]
+    result_gene_list = []
+    for idx in tqdm(range(len(gene_data_bin)), leave=False):
+        data = torch.tensor(gene_data_bin[idx]).float().to(args.device)
+        data = data.unsqueeze(0).requires_grad_()
+        target = np.where(pred[idx]>=args.threshold)[0]
 
-            result = guided_bp.visualize(input_image=data, target_position=target)
-            result_gene_list.append(result[0])
+        result = guided_bp.visualize(input_image=data, target_position=target)
+        result_gene_list.append(result[0])
 
-        result = np.array(result_gene_list)
-        result = result.sum(-1)
-        result_sum = np.zeros((data_origin.shape[0], len(data_origin[0])))
-        for n in range(result.shape[1]):
-            result_sum[:, n*args.walk: n*args.walk+args.bin] += result[:, n]
-        result_tf_gene_list.append(result_sum)
-        
-    result = np.array(result_tf_gene_list)
-    result = result.transpose(1, 0, 2)
-    np.save(f'{args.output_dir}/{args.fasta_file}/guidedBP_1stDL_result', result)
+    result = np.array(result_gene_list)
 
     ###### save ######
     print('Saving results ...')    
-    p = Path(f'{args.output_dir}/{args.fasta_file}/1st-weight-csv/')
-    p.mkdir(parents=True, exist_ok=True)
-
+    Path(f'{args.output_dir}/{args.fasta_file}/1st-weight-csv/{TF_name}/').mkdir(parents=True, exist_ok=True)
     for i in tqdm(range(len(gene_name)), leave=False):
-        data=result[i]
+        data = result[i].reshape(-1, args.bin)
+
         data[data<0]=0
         data -= data.min(axis=-1, keepdims=True)
         data /= (data.max(axis=-1, keepdims=True)+1e-10)
         data = np.round(data, decimals=2)
-        df = pd.DataFrame(data=data, columns=list(data_origin[i]), index=TF_dict)
-        df.to_csv(f'{args.output_dir}/{args.fasta_file}/1st-weight-csv/{gene_name[i]}.csv')
+
+        index = [elem for item in gene_data_origin_bin[i] for elem in (item+'_A', ' '*len(item)+'_T', ' '*len(item)+'_G', ' '*len(item)+'_C')]
+
+        df = pd.DataFrame(data=data, index=index)
+        df.to_csv(f'{args.output_dir}/{args.fasta_file}/1st-weight-csv/{TF_name}/{gene_name[i]}.csv')
