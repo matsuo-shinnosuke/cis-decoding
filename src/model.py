@@ -2,22 +2,15 @@ import math
 import torch
 import torch.nn as nn
 
-class get_FC_3layer(nn.Module):
-    def __init__(self, bin):
-        super().__init__()
-
-        self.features = nn.Sequential(
-            nn.Flatten(start_dim=-2, end_dim=-1),
-            nn.Linear(bin*4, 256),
-            nn.ReLU(),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 2),
-        )
-
-    def forward(self, x):
-        x = self.features(x)
-        return x
+def get_FC_3layer(bin):
+    return nn.Sequential(
+        nn.Flatten(start_dim=-2, end_dim=-1),
+        nn.Linear(bin*4, 256),
+        nn.ReLU(),
+        nn.Linear(256, 64),
+        nn.ReLU(),
+        nn.Linear(64, 2),
+    )
     
 class CNN(nn.Module):
     def __init__(self, data_length=20, n_channel=50, last_dense=2):

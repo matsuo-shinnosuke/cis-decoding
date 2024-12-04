@@ -38,7 +38,7 @@ class Guided_backprop():
 
             return (new_grad_in,)
 
-        modules = list(self.model.features.named_children())
+        modules = list(self.model.named_children())
 
         # travese the modules，register forward hook & backward hook
         # for the ReLU
