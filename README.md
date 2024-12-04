@@ -23,10 +23,10 @@ $ pip install -r requirements.txt
 ```
 
 ## Training & Test
-0. Please place the following two files in the `./data` directory.
+0. Please place the following two files in the `./dataset` directory.
 - Fasta file
 ```
-# ./data/sample_data.fa
+# ./dataset/sample_data.fa
 >LG10:10024102-10026102
 GAAATAACATCAGAATAGTGACAAGCACTCT..
 >LG10:10083895-10085895
@@ -36,7 +36,7 @@ AATACTCTAAGGGGCAAAGTGTAGTTAGCGA..
 ```
 - Target binary expression pattern file (tab-delimited)
 ```
-# ./data/sample_label.txt
+# ./dataset/sample_label.txt
 LG11:8580379-8582379	1
 LG11:8734084-8736084	1
 ：
@@ -47,12 +47,12 @@ LG11:8790102-8792102	0
 
 1. Execute 1st-DL.
 ```
-$ python src/main_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
+$ python src/main_1stDL.py --data_dir='dataset/' --fasta_file='sample_data.fa' --length=2001 --output_dir='result/'
 ```
 
 2. (optional) Output 1st-DL results to csv file for each gene. If the number of genes is large, this may take a lot of time (a few hours). You can proceed without this run.
 ```
-$ python src/to_csv_1stDL.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
+$ python src/to_csv_1stDL.py --data_dir='dataset/' --fasta_file='sample_data.fa' --output_dir='result/'
 ```
 Output example
 - `1st-pred-csv/(gene name).csv` shows the TF-binding peaks.
@@ -67,8 +67,8 @@ Output example
 
 3. Execute 2nd-DL.
 ```
-$ python src/main_2ndDL.py --data_dir='data/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
-$ python src/guidedBP.py --data_dir='data/' --fasta_file='sample_data.fa' --output_dir='result/'
+$ python src/main_2ndDL.py --data_dir='dataset/' --fasta_file='sample_data.fa' --label_file='sample_label.txt' --output_dir='result/'
+$ python src/guidedBP.py --data_dir='dataset/' --fasta_file='sample_data.fa' --output_dir='result/'
 ```
 Output example
 - `roc_curve.png` shows AUC and ROC curve.
