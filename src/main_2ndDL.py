@@ -14,7 +14,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from arguments import parse_option
-from utils import CNN, fix_seed
+from model import CNN
+from utils import fix_seed
 
 def make_dataset(args):
     ############# data ################

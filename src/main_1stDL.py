@@ -8,9 +8,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import pandas as pd
 
+from model import get_FC_3layer
 from arguments import parse_option
 from utils import dna2onehot
-
 
 def load_data(data_dir, fasta_file_name, gene_length, output_dir):
     if os.path.exists(f'{output_dir}/{fasta_file_name}/gene_name.npy'):
@@ -96,34 +96,6 @@ class Dataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         data = torch.tensor(self.data[idx]).float()
         return data
-
-    
-# def get_FC_3layer(bin):
-#     return nn.Sequential(
-#         nn.Flatten(start_dim=-2, end_dim=-1),
-#         nn.Linear(bin*4, 256),
-#         nn.ReLU(),
-#         nn.Linear(256, 64),
-#         nn.ReLU(),
-#         nn.Linear(64, 2),
-#     )
-
-class get_FC_3layer(nn.Module):
-    def __init__(self, bin):
-        super().__init__()
-
-        self.features = nn.Sequential(
-            nn.Flatten(start_dim=-2, end_dim=-1),
-            nn.Linear(bin*4, 256),
-            nn.ReLU(),
-            nn.Linear(256, 64),
-            nn.ReLU(),
-            nn.Linear(64, 2),
-        )
-
-    def forward(self, x):
-        x = self.features(x)
-        return x
 
 def prediction(model, dataloader, device):
     model.eval()

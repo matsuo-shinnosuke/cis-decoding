@@ -1,8 +1,6 @@
 import torch
 import numpy as np
 import pandas as pd
-import torch.nn as nn
-
 
 def fix_seed(seed):
     np.random.seed(seed)
@@ -22,47 +20,3 @@ def dna2onehot(x):
     # onehot
     x = np.eye(4)[x]
     return x
-
-class CNN(nn.Module):
-    def __init__(self, data_length=20, n_channel=50, last_dense=2):
-        super().__init__()
-        self.z_size = data_length
-        for i in range(4):
-            self.z_size = self.z_size//2
-        self.features = nn.Sequential(
-            nn.Conv1d(n_channel, 64, kernel_size=15, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(64, 64, kernel_size=15, padding='same'),
-            nn.ReLU(),
-            nn.MaxPool1d(2),
-            nn.Dropout(0.25),
-            nn.Conv1d(64, 32, kernel_size=10, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(32, 32, kernel_size=10, padding='same'),
-            nn.ReLU(),
-            nn.MaxPool1d(2),
-            nn.Conv1d(32, 32, kernel_size=5, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(32, 32, kernel_size=5, padding='same'),
-            nn.ReLU(),
-            nn.MaxPool1d(2),
-            nn.Conv1d(32, 32, kernel_size=3, padding='same'),
-            nn.ReLU(),
-            nn.Conv1d(32, 32, kernel_size=3, padding='same'),
-            nn.ReLU(),
-            nn.MaxPool1d(2),
-            nn.Dropout(0.25),
-            nn.Flatten(),
-            nn.Linear(32*self.z_size, 32),
-            nn.ReLU(),
-            nn.Linear(32, 16),
-            nn.ReLU(),
-            nn.Linear(16, 8),
-            nn.ReLU(),
-            nn.Linear(8, last_dense),
-        )
-
-    def forward(self, x):
-        x = x.transpose(2, 1)
-        x = self.features(x)
-        return x

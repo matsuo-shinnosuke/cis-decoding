@@ -9,12 +9,12 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from utils import Dataset, dna2onehot, fix_seed, get_FC_3layer
-
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 import logging
 
+from model import get_FC_3layer
+from utils import dna2onehot, fix_seed
 
 def load_data(TF, dataset_path):
     print('load %s ...' % TF)
@@ -51,7 +51,20 @@ def load_data(TF, dataset_path):
 
     return X, Y
 
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, data, label):
+        self.data = data
+        self.label = label
+        self.len = self.label.shape[0]
 
+    def __len__(self):
+        return self.len
+
+    def __getitem__(self, idx):
+        data = torch.tensor(self.data[idx]).float()
+        label = torch.tensor(self.label[idx]).long()
+        return data, label
+    
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -78,10 +91,6 @@ if __name__ == "__main__":
     file_handler = logging.FileHandler(args.output_path+'training.log')
     logging.basicConfig(level=logging.DEBUG, handlers=[
                         stream_handler, file_handler])
-
-    ######## training for all TF #########
-    # with open('./TF_dict.pkl', 'rb') as tf:
-    #     TF_dict = pickle.load(tf)
     
     TF_dict = open(args.dataset_path+'TF_dict.txt', 'r').read().split('\n')
 
@@ -99,7 +108,6 @@ if __name__ == "__main__":
             X, Y, test_size=0.33, random_state=111)
 
         ############ define model & loader & optimizer #############
-        # model = get_FC_3layer().to(args.device)
         model = get_FC_3layer(args.length).to(args.device)
 
         weight = 1 / np.eye(2)[Y].sum(axis=0)
