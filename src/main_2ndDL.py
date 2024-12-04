@@ -14,7 +14,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from arguments import parse_option
-from model import CNN
+from model import CNN, TransformerClassification
 from utils import fix_seed
 
 def make_dataset(args):
@@ -85,7 +85,12 @@ if __name__ == "__main__":
         test_dataset,batch_size=args.batch_size,
         shuffle=False, num_workers=args.num_workers)
 
-    model = CNN(data_length=X.shape[1], n_channel=X.shape[2]).to(args.device)
+    if args.model == 'CNN':
+        model = CNN(data_length=X.shape[1], n_channel=X.shape[2]).to(args.device)
+    elif args.model == 'Transformer':
+        model = TransformerClassification(model_dim=X.shape[2], max_seq_len=X.shape[1]).to(args.device)
+    else:
+        print('model none')
 
     weight = 1 / np.eye(2)[Y].sum(axis=0)
     weight /= weight.sum()
