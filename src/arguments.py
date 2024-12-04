@@ -20,9 +20,10 @@ def parse_option():
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--device', default='cuda:0', type=str)
     parser.add_argument('--batch_size', default=512, type=int)
-    parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--lr', default=1e-4, type=float)
     parser.add_argument('--num_epochs', default=30, type=int)
     parser.add_argument('--num_workers', default=4, type=int)
+    parser.add_argument('--model', default='CNN', choices=['CNN', 'Transformer'], type=str)
 
     parser.add_argument('--TF_name', default='ABF2_col_v3a', type=str)
 
