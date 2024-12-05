@@ -83,7 +83,7 @@ class TransformerClassification(nn.Module):
         self.head = ClassificationHead(
             output_dim=output_dim, model_dim=model_dim)
 
-    def forward(self, x):
+    def forward(self, x, return_attention=False):
         cls_tokens = self.cls_token.repeat(x.shape[0], 1, 1)
         x = torch.cat((cls_tokens, x), dim=1)
         x = self.ff(x)
@@ -95,7 +95,10 @@ class TransformerClassification(nn.Module):
                 attention *= attention
         logits = self.head(x)
 
-        return logits
+        if return_attention:
+            return logits, attention
+        else:
+            return logits
 
 class EncoderLayer(nn.Module):
     def __init__(self, d_model, ffn_hidden, n_head, drop_prob):

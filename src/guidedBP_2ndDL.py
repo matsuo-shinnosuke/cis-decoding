@@ -109,7 +109,7 @@ if __name__ == "__main__":
         data[data<0]=0
         data -= data.min(axis=-1, keepdims=True)
         data /= (data.max(axis=-1, keepdims=True)+1e-10)
-        data = np.round(data, decimals=2)
+        data = np.round(data, decimals=6)
         df = pd.DataFrame(data=data, index=TF_dict)
         df.to_csv(f'{args.output_dir}/{args.fasta_file}/2nd-weight-csv/{gene_name[i]}.csv')
 
