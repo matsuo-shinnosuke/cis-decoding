@@ -17,8 +17,7 @@ import pickle
 from pathlib import Path
 
 from arguments import parse_option
-from model import TransformerClassification
-from utils import *
+from model import TransformerClassification, CvT
 
 if __name__ == "__main__":
     args = parse_option()
@@ -26,13 +25,21 @@ if __name__ == "__main__":
     X = np.load(f'{args.output_dir}/{args.fasta_file}/2nd-data.npy')
     Y = np.load(f'{args.output_dir}/{args.fasta_file}/2nd-label.npy')
     gene_name = np.load(f'{args.output_dir}/{args.fasta_file}/gene_name.npy')
+
+    if args.model == 'CvT':
+        X = np.load(f'{args.output_dir}/{args.fasta_file}/gene_data.npy')
     # # only test data
     # _, X, _, Y, _, gene_name = train_test_split(
     #     X, Y, gene_name, test_size=0.33, random_state=args.seed)
     X, gene_name = X[Y==1], gene_name[Y==1] # expression data
     
     ##### Inference ######
-    model = TransformerClassification(model_dim=X.shape[2], max_seq_len=X.shape[1]).to(args.device)
+    if args.model == 'Transformer':
+        model = TransformerClassification(model_dim=X.shape[2], max_seq_len=X.shape[1], n_layers=args.n_layers).to(args.device)
+    elif args.model == 'CvT':
+        model = CvT(ch=X.shape[2], length=X.shape[1], n_layers=args.n_layers, bin=args.bin).to(args.device)
+    else:
+        print('model none')
     model.load_state_dict(torch.load(f'{args.output_dir}/{args.fasta_file}/model.pkl', map_location=args.device))
     model.eval()
     

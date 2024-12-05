@@ -262,3 +262,78 @@ class ClassificationHead(nn.Module):
         out = self.linear(x0)
 
         return out
+    
+###################### CvT ######################
+class CNN(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Conv1d(input_dim, 16, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Conv1d(16, 32, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Conv1d(32, output_dim, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(output_dim),
+        )
+
+    def forward(self, x):
+        x = x.transpose(2, 1)
+        x = self.model(x)
+        x = x.transpose(2, 1)
+        return x
+
+class CvT(nn.Module):
+    def __init__(self, ch, length, model_dim=64, output_dim=2, n_layers=6, bin=4, drop_prob=0):
+        super().__init__()
+
+        self.ch, self.length = ch, length
+        # self.model_dim, self.output_dim = model_dim, output_dim
+        self.model_dim, self.output_dim = 512//bin, output_dim
+        self.n_layers, self.bin = n_layers, bin
+
+        if (self.length % self.bin) == 0:
+            self.tf_length = (self.length // self.bin)
+            pad = 0
+        else: 
+            self.tf_length = (self.length // self.bin) + 1
+            pad = self.tf_length*self.bin - self.length
+        self.padding = nn.ZeroPad2d((0, 0, 0, pad))
+
+        self.cls_token = nn.Parameter(torch.randn(1, 1, self.model_dim*self.bin))
+        
+        self.cnn = CNN(input_dim=self.ch, output_dim=self.model_dim)
+
+        self.pe = PositionalEncoder(
+            model_dim=self.model_dim*self.bin, max_seq_len=self.tf_length+1)
+
+        self.tf_layers = nn.ModuleList([EncoderLayer(d_model=self.model_dim*self.bin,
+                                                  ffn_hidden=self.model_dim*self.bin,
+                                                  n_head=8,
+                                                  drop_prob=drop_prob)
+                                                for _ in range(self.n_layers)])
+
+        self.head = ClassificationHead(
+            model_dim=self.model_dim*self.bin, output_dim=self.output_dim)
+
+    def forward(self, x, return_attention=False):
+        x = self.padding(x)
+        x = self.cnn(x)
+        x = x.reshape(x.size(0), self.tf_length, -1)
+
+        cls_tokens = self.cls_token.repeat(x.size(0), 1, 1)
+        x = torch.cat((cls_tokens, x), dim=1)
+        x = self.pe(x)
+        
+        for i, layer in enumerate(self.tf_layers):
+            x, attention = layer(x=x, src_mask=None)
+            attention = attention.cpu().detach()
+            if i !=0:
+                attention *= attention
+        logits = self.head(x)
+
+        if return_attention:
+            return logits, attention
+        else:
+            return logits
