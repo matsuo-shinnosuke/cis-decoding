@@ -13,43 +13,34 @@ from arguments import parse_option
 from utils import dna2onehot
 
 def load_data(data_dir, fasta_file_name, gene_length, output_dir):
-    if os.path.exists(f'{output_dir}/{fasta_file_name}/gene_name.npy'):
-        print('loading data ...')
-        name = np.load(f'{output_dir}/{fasta_file_name}/gene_name.npy')
-        data = np.load(f'{output_dir}/{fasta_file_name}/gene_data.npy')
-        data_origin = np.load(f'{output_dir}/{fasta_file_name}/gene_data_origin.npy')
-        print('[gene_name.npy] size: ' + str(name.shape))
-        print('[gene_data.npy] size: ' + str(data.shape))
-        print('[gene_data_origin.npy] size: ' + str(data_origin.shape))
-    else:
-        print('.fa->.npy file ...')
-        fas = open(f'{data_dir}/{fasta_file_name}', 'r')
-        fas = fas.readlines()
+    print('.fa->.npy file ...')
+    fas = open(f'{data_dir}/{fasta_file_name}', 'r')
+    fas = fas.readlines()
 
-        name, data_origin, data = [], [], []
-        for i in tqdm(range(0, len(fas), 2), leave=False):
-            if len(fas[i+1].rstrip()) == gene_length:
-                name.append(fas[i].rstrip()[1:])
-                data_origin.append(fas[i+1].rstrip())
-                data.append(dna2onehot(
-                    list(fas[i+1].rstrip())).astype(np.int8))
-            else:
-                print(fas[i].rstrip(), len(fas[i+1].rstrip()))
-                print(f'Not satisfy gene length {gene_length}')
-        
+    name, data_origin, data = [], [], []
+    for i in tqdm(range(0, len(fas), 2), leave=False):
+        if len(fas[i+1].rstrip()) == gene_length:
+            name.append(fas[i].rstrip()[1:])
+            data_origin.append(fas[i+1].rstrip())
+            data.append(dna2onehot(
+                list(fas[i+1].rstrip())).astype(np.int8))
+        else:
+            print(fas[i].rstrip(), len(fas[i+1].rstrip()))
+            print(f'Not satisfy gene length {gene_length}')
+    
 
-        p = Path(f'{output_dir}/{fasta_file_name}/')
-        p.mkdir(parents=True, exist_ok=True)
+    p = Path(f'{output_dir}/{fasta_file_name}/')
+    p.mkdir(parents=True, exist_ok=True)
 
-        name = np.array(name)
-        np.save(f'{output_dir}/{fasta_file_name}/gene_name.npy', name)
-        print('[gene_name.npy] size: ' + str(name.shape))
-        data = np.array(data)
-        np.save(f'{output_dir}/{fasta_file_name}/gene_data.npy', data)
-        print('[gene_data.npy] size: ' + str(data.shape))
-        data_origin = np.array(data_origin)
-        np.save(f'{output_dir}/{fasta_file_name}/gene_data_origin.npy', data_origin)
-        print('[gene_data_origin.npy] size: ' + str(data_origin.shape))
+    name = np.array(name)
+    np.save(f'{output_dir}/{fasta_file_name}/gene_name.npy', name)
+    print('[gene_name.npy] size: ' + str(name.shape))
+    data = np.array(data)
+    np.save(f'{output_dir}/{fasta_file_name}/gene_data.npy', data)
+    print('[gene_data.npy] size: ' + str(data.shape))
+    data_origin = np.array(data_origin)
+    np.save(f'{output_dir}/{fasta_file_name}/gene_data_origin.npy', data_origin)
+    print('[gene_data_origin.npy] size: ' + str(data_origin.shape))
 
     return name, data, data_origin
 

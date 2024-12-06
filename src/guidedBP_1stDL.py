@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
@@ -51,12 +52,15 @@ class Guided_backprop():
         first_layer = modules[0][1] 
         first_layer.register_full_backward_hook(first_layer_hook_fn)
 
-    def visualize(self, input_image, target_position):
+    def visualize(self, input_image):
         model_output = self.model(input_image)
         self.model.zero_grad()
+
+        pred = F.softmax(model_output, dim=-1)[:, :, 1].cpu().detach().numpy()[0]
+        target = np.where(pred>=args.threshold)[0]
         
         grad_target_map = torch.zeros(model_output.shape, dtype=torch.float).to(args.device)
-        grad_target_map[0, target_position, 1] = 1
+        grad_target_map[0, target, 1] = 1
         
         model_output.backward(grad_target_map)
         
@@ -88,16 +92,14 @@ if __name__ == "__main__":
 
     model = get_FC_3layer(bin=args.bin).to(args.device)
     model.load_state_dict(torch.load(f'{args.model_dir}/{TF_name}.pkl', map_location=torch.device(args.device)))
+    model.eval()
     guided_bp = Guided_backprop(model)
-    pred = np.load(f'{args.output_dir}/{args.fasta_file}/1st-pred/{TF_name}.npy')
 
     result_gene_list = []
     for idx in tqdm(range(len(gene_data_bin)), leave=False):
         data = torch.tensor(gene_data_bin[idx]).float().to(args.device)
         data = data.unsqueeze(0).requires_grad_()
-        target = np.where(pred[idx]>=args.threshold)[0]
-
-        result = guided_bp.visualize(input_image=data, target_position=target)
+        result = guided_bp.visualize(input_image=data)
         result_gene_list.append(result[0])
 
     result = np.array(result_gene_list)
