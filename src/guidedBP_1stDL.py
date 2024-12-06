@@ -111,7 +111,7 @@ if __name__ == "__main__":
         data[data<0]=0
         data -= data.min(axis=-1, keepdims=True)
         data /= (data.max(axis=-1, keepdims=True)+1e-10)
-        data = np.round(data, decimals=2)
+        data = np.round(data, decimals=6)
 
         index = [elem for item in gene_data_origin_bin[i] for elem in (item+'_A', ' '*len(item)+'_T', ' '*len(item)+'_G', ' '*len(item)+'_C')]
 

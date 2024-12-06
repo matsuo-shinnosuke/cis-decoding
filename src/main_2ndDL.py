@@ -9,15 +9,18 @@ from tqdm import tqdm
 from time import time
 from glob import glob
 import pandas as pd
+import os
+from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from arguments import parse_option
-from model import CNN, TransformerClassification
-from utils import fix_seed
+from model import CNN, TransformerClassification, CvT
+from utils import fix_seed, dna2onehot
+from main_1stDL import load_data as load_raw_dataset
 
-def make_dataset(args):
+def load_dataset(args):
     ############# data ################
     print('making dataset..')
     result_1st_path = f'{args.output_dir}/{args.fasta_file}/1st-cis-{args.bin_peak}-{args.threshold}/'
@@ -69,7 +72,17 @@ if __name__ == "__main__":
     fix_seed(seed=args.seed)
 
     ######## Loading data #########
-    X, Y, gene_name = make_dataset(args)
+    if args.model in ['CNN', 'Transformer']:
+        X, Y, gene_name = load_dataset(args)
+    elif args.model in ['CvT']:
+        X, Y, gene_name = load_dataset(args)
+        _, X, _ = load_raw_dataset(data_dir=args.data_dir, 
+                            fasta_file_name=args.fasta_file, 
+                            gene_length=args.length,
+                            output_dir=args.output_dir)
+    else:
+        print('model none')
+    
 
     ######## Preparation #########
     X_train, X_test, Y_train, Y_test, name_train, name_test = train_test_split(
@@ -88,7 +101,9 @@ if __name__ == "__main__":
     if args.model == 'CNN':
         model = CNN(data_length=X.shape[1], n_channel=X.shape[2]).to(args.device)
     elif args.model == 'Transformer':
-        model = TransformerClassification(model_dim=X.shape[2], max_seq_len=X.shape[1]).to(args.device)
+        model = TransformerClassification(model_dim=X.shape[2], max_seq_len=X.shape[1], n_layers=args.n_layers).to(args.device)
+    elif args.model == 'CvT':
+        model = CvT(ch=X.shape[2], length=X.shape[1], n_layers=args.n_layers, bin=args.bin).to(args.device)
     else:
         print('model none')
 
