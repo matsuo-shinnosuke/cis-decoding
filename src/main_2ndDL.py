@@ -75,11 +75,12 @@ if __name__ == "__main__":
     if args.model in ['CNN', 'Transformer']:
         X, Y, gene_name = load_dataset(args)
     elif args.model in ['CvT']:
-        X, Y, gene_name = load_dataset(args)
         _, X, _ = load_raw_dataset(data_dir=args.data_dir, 
                             fasta_file_name=args.fasta_file, 
                             gene_length=args.length,
                             output_dir=args.output_dir)
+        _, Y, gene_name = load_dataset(args)
+        # X, Y, gene_name = load_dataset(args)
     else:
         print('model none')
     

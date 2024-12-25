@@ -257,26 +257,6 @@ class ClassificationHead(nn.Module):
         return out
     
 ###################### CvT ######################
-class CNN(nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Conv1d(input_dim, 16, kernel_size=3, padding='same'),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
-            nn.Conv1d(16, 32, kernel_size=3, padding='same'),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-            nn.Conv1d(32, output_dim, kernel_size=3, padding='same'),
-            nn.BatchNorm1d(output_dim),
-        )
-
-    def forward(self, x):
-        x = x.transpose(2, 1)
-        x = self.model(x)
-        x = x.transpose(2, 1)
-        return x
-
 class CvT(nn.Module):
     def __init__(self, ch, length, model_dim=64, output_dim=2, n_layers=6, bin=4, drop_prob=0):
         super().__init__()
@@ -296,7 +276,16 @@ class CvT(nn.Module):
 
         self.cls_token = nn.Parameter(torch.randn(1, 1, self.model_dim*self.bin))
         
-        self.cnn = CNN(input_dim=self.ch, output_dim=self.model_dim)
+        self.cnn = nn.Sequential(
+            nn.Conv1d(self.ch, 16, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Conv1d(16, 32, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Conv1d(32, self.model_dim, kernel_size=3, padding='same'),
+            nn.BatchNorm1d(self.model_dim),
+        )
 
         self.pe = PositionalEncoder(
             model_dim=self.model_dim*self.bin, max_seq_len=self.tf_length+1)
@@ -312,7 +301,13 @@ class CvT(nn.Module):
 
     def forward(self, x, return_attention=False):
         x = self.padding(x)
+
+        # --- CNN ---
+        x = x.transpose(2, 1)
         x = self.cnn(x)
+        x = x.transpose(2, 1)
+
+        # --- Transformer ---
         x = x.reshape(x.size(0), self.tf_length, -1)
 
         cls_tokens = self.cls_token.repeat(x.size(0), 1, 1)
