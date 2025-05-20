@@ -12,8 +12,14 @@ def fix_seed(seed):
 
 def dna2onehot(x):
     dna2num_dict = {'A': 0, 'T': 1, 'G': 2, 'C': 3,
-                    'N': 3, 'n': 3, 'S': 3, 'K': 3,
-                    'M': 3, 'W': 3, 'R': 3, 'Y': 3}
+                    'a': 0, 't': 1, 'g': 2, 'c': 3,
+                    'N': 3, 'n': 3, 
+                    'S': 3, 's': 3, 
+                    'K': 3, 'k': 3, 
+                    'M': 3, 'm': 3, 
+                    'W': 3, 'w': 3, 
+                    'R': 3, 'r': 3, 
+                    'Y': 3, 'y': 3, }
     x = pd.Series(x)
     x = x.map(dna2num_dict)
 
